@@ -15,8 +15,8 @@ sdk
     hotKeys: {
       ...DefaultHotKeys,
       changeToEraser: "e",
-      changeToPencil: "p"
-    }
+      changeToPencil: "p",
+    },
   })
   .then((room) => {
     (window as any).room = room;

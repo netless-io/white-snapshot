@@ -49,12 +49,13 @@ export async function snapshot(
   displayer.fillSceneSnapshot(scenePath, wrapper, width, height);
   const svg = search_svg(wrapper);
   if (!svg) {
+    document.body.removeChild(wrapper);
     return null;
   }
 
   const viewBox = svg.getAttribute("viewBox");
   if (viewBox) {
-    const view = viewBox.split(" ").map(e => Number(e));
+    const view = viewBox.split(" ").map((e) => Number(e));
     [width, height] = view.slice(2);
   }
   // Take the advantage of `svg` can be auto-scaled to parent element.
