@@ -4,7 +4,15 @@
   "description": "Take a snapshot of a white-web-sdk scene.",
   "main": "index.js",
   "module": "index.mjs",
-  "types": "index.ts",
+  "types": "index.d.ts",
+  "files": [
+    "index.ts",
+    "index.js",
+    "index.mjs",
+    "index.js.map",
+    "index.mjs.map",
+    "index.d.ts"
+  ],
   "repository": "netless-io/white-snapshot",
   "scripts": {
     "build": "pnpm build:esm && pnpm build:cjs",
