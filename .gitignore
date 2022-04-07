@@ -2,3 +2,6 @@ node_modules
 dist
 index.js
 index.mjs
+index.d.ts
+index.js.map
+index.mjs.map
