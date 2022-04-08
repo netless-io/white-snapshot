@@ -1,28 +1,36 @@
-import { DefaultHotKeys, RenderEngine, WhiteWebSdk } from "white-web-sdk";
-import { snapshot } from "./index";
-
-const sdk = new WhiteWebSdk({
-  appIdentifier: "Gh0NyZub25jZT0x/Amcm9sZT0w",
-  renderEngine: RenderEngine.Canvas,
+navigator.serviceWorker.getRegistrations().then((rs) => {
+  rs.forEach((r) => r.unregister());
 });
 
-sdk
-  .joinRoom({
-    uid: "uid-" + Math.random().toString(36).slice(2),
-    uuid: "7285abc0b62911ecbd89bfc026a26890",
-    roomToken:
-      "NETLESSROOM_YWs9eTBJOWsxeC1IVVo4VGh0NyZub25jZT0xNjQ5MzA0OTY3Njg0MDAmcm9sZT0wJnNpZz04YjA2N2Q1ZjAwZjU1NTBjM2E3NjNkMWIzNjMxOGUyMGUzMWRmOTI3ZmFiYjNmOTkzYTk0NTYwOWEwYTM4N2M3JnV1aWQ9NzI4NWFiYzBiNjI5MTFlY2JkODliZmMwMjZhMjY4OTA",
-    hotKeys: {
-      ...DefaultHotKeys,
-      changeToEraser: "e",
-      changeToPencil: "p",
-    },
-  })
-  .then((room) => {
-    (window as any).room = room;
-    (window as any).snapshot = snapshot;
+var src_orginal =
+  "https://flat-storage.oss-accelerate.aliyuncs.com/cloud-storage/2022-02/21/59455e11-d5fe-4f88-9d50-39b824a5c94b/59455e11-d5fe-4f88-9d50-39b824a5c94b.jpeg";
+var src_cors = "http://localhost:4000/img.jpeg";
 
-    room.bindHtmlElement(
-      document.getElementById("whiteboard") as HTMLDivElement
-    );
-  });
+var chosen = src_cors;
+
+var canvas = document.querySelector("canvas");
+var context = canvas.getContext("2d");
+
+var image = new Image();
+window.image = image;
+image.onload = () => {
+  context.drawImage(image, 0, 0);
+  var a = document.createElement("a");
+  a.textContent = "download";
+  a.download = "img.jpeg";
+  a.href = canvas.toDataURL();
+  document.body.appendChild(a);
+  // a.dispatchEvent(new MouseEvent("click"));
+};
+
+// If there's no CORS header (src_orginal)
+// 1. without this prop, the image can be drawn, but cannot be exported (toDataURL)
+// 2. with this prop, the image cannot be drawn, and cannot be exported
+
+// If there's CORS header (src_cors)
+// 2. with this prop, the image can be drawn, and can be exported
+
+if (chosen === src_cors) {
+  image.setAttribute("crossorigin", "anonymous");
+}
+image.src = chosen;

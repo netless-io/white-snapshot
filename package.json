@@ -18,7 +18,8 @@
     "build": "pnpm build:esm && pnpm build:cjs",
     "build:esm": "esbuild index.ts --format=esm --outfile=index.mjs --sourcemap",
     "build:cjs": "tsc -p tsconfig.json",
-    "dev": "esbuild test.ts --bundle --sourcemap --servedir=. --serve=3000"
+    "dev": "esbuild test.ts --bundle --sourcemap --servedir=. --serve=3000",
+    "serve": "esbuild server.ts | node --input-type=module"
   },
   "keywords": [
     "white-web-sdk",

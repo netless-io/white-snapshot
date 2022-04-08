@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Test Snapshot</title>
+    <title>Test Canvas CORS</title>
     <style>
       * {
         box-sizing: border-box;
@@ -11,21 +11,15 @@
       body {
         background-color: #eee;
       }
-      #whiteboard {
-        width: 400px;
-        height: 300px;
-      }
       canvas {
         border: 1px solid green;
+        width: 400px;
+        height: 300px;
       }
     </style>
   </head>
   <body>
-    <div>Note: canvas elements have green border.</div>
-    <div id="whiteboard"></div>
-    <button onclick="snapshot(room).then(e=>document.body.append(e))">
-      SNAPSHOT
-    </button>
+    <canvas id="whiteboard"></canvas>
     <script src="test.js"></script>
   </body>
 </html>
