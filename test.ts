@@ -28,6 +28,7 @@ image.onload = () => {
 // 2. with this prop, the image cannot be drawn, and cannot be exported
 
 // If there's CORS header (src_cors)
+// 1. without this prop, the image can be drawn, but cannot be exported (toDataURL)
 // 2. with this prop, the image can be drawn, and can be exported
 
 if (chosen === src_cors) {
