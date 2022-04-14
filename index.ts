@@ -1,5 +1,4 @@
 import type { Displayer } from "white-web-sdk";
-import html2canvas from "html2canvas";
 
 /**
  * Search the displaying svg element.
@@ -7,10 +6,39 @@ import html2canvas from "html2canvas";
  * @returns The svg element or null if not found.
  */
 function search_svg(container: HTMLDivElement) {
-  return container.querySelector(".background~svg");
+  return container.querySelector(".background~svg") as SVGElement;
+}
+
+function extract_size_from_svg(svg: SVGElement, width: number, height: number) {
+  const viewBox = svg.getAttribute("viewBox");
+  if (viewBox) {
+    const view = viewBox.split(" ").map(e => Number(e));
+    [width, height] = view.slice(2);
+  }
+  return { width, height };
+}
+
+/**
+ * Search the displaying canvas element.
+ * @param container The param you used in `room.bindHtmlElement`.
+ * @returns The canvas element or null if not found.
+ */
+function search_canvas(container: HTMLDivElement) {
+  for (const canvas of container.querySelectorAll(".background~canvas")) {
+    if ((canvas as HTMLCanvasElement).style.visibility === "visible") {
+      return canvas as HTMLCanvasElement;
+    }
+  }
+  return null;
 }
 
 function noop() {}
+
+function next_frame() {
+  return new Promise(resolve => {
+    (window.requestAnimationFrame || setTimeout)(resolve);
+  });
+}
 
 export interface SnapshotOptions {
   /**
@@ -24,6 +52,25 @@ export interface SnapshotOptions {
    * @default null
    */
   crop?: Record<"x" | "y" | "width" | "height", number> | null;
+
+  /**
+   * Use `html2canvas` to print SVG directly.
+   *
+   * @default false
+   */
+  html2canvas?: boolean;
+}
+
+function wrapper_element() {
+  const wrapper = document.createElement("div");
+  Object.assign(wrapper.style, {
+    position: "fixed",
+    top: `-9999px`,
+    left: `-9999px`,
+    width: `100px`,
+    height: `100px`,
+  });
+  return wrapper;
 }
 
 /**
@@ -33,49 +80,52 @@ export interface SnapshotOptions {
  */
 export async function snapshot(
   displayer: Displayer,
-  { padding = 5, crop: crop_ = null }: SnapshotOptions = {}
+  { padding = 5, crop: crop_ = null, html2canvas = false }: SnapshotOptions = {}
 ) {
   const { scenePath } = displayer.state.sceneState;
-  const wrapper = document.createElement("div");
   let { width, height } = displayer.state.cameraState;
-  Object.assign(wrapper.style, {
-    position: "fixed",
-    top: `-9999px`,
-    left: `-9999px`,
-    width: `100px`,
-    height: `100px`,
-  });
+
+  const wrapper = wrapper_element();
   document.body.appendChild(wrapper);
-  displayer.fillSceneSnapshot(scenePath, wrapper, width, height);
+
+  // @ts-expect-error
+  // 1. Get real size from svg element
+  displayer.fillSceneSnapshot(scenePath, wrapper, width, height, "svg");
+  await next_frame();
   const svg = search_svg(wrapper);
   if (!svg) {
     document.body.removeChild(wrapper);
     return null;
   }
+  ({ width, height } = extract_size_from_svg(svg, width, height));
 
-  const viewBox = svg.getAttribute("viewBox");
-  if (viewBox) {
-    const view = viewBox.split(" ").map((e) => Number(e));
-    [width, height] = view.slice(2);
-  }
-  // Take the advantage of `svg` can be auto-scaled to parent element.
-  Object.assign(wrapper.style, {
-    width: `${width}px`,
-    height: `${height}px`,
-    padding: `${padding}px`,
-  });
-
+  // 2. Render canvas
   try {
-    const canvas = await html2canvas(wrapper, {
-      useCORS: true,
-      backgroundColor: null,
-      onclone: noop,
-    });
-    if (crop_) {
-      return crop(canvas, crop_);
+    let canvas: HTMLCanvasElement | null;
+
+    if (html2canvas || displayer.fillSceneSnapshot.length < 5) {
+      const { default: html2canvas } = await import("html2canvas");
+      Object.assign(wrapper.style, {
+        width: `${width}px`,
+        height: `${height}px`,
+        padding: `${padding}px`,
+      });
+      canvas = await html2canvas(wrapper, {
+        useCORS: true,
+        backgroundColor: null,
+        onclone: noop,
+      });
     } else {
-      return canvas;
+      while (wrapper.firstChild) wrapper.removeChild(wrapper.lastChild!);
+      // @ts-expect-error
+      displayer.fillSceneSnapshot(scenePath, wrapper, width, height, "canvas");
+      await next_frame();
+      canvas = search_canvas(wrapper);
     }
+
+    if (!canvas) return null;
+
+    return crop_ ? crop(canvas, crop_) : canvas;
   } finally {
     document.body.removeChild(wrapper);
   }
