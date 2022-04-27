@@ -17,6 +17,9 @@ snapshot(room).then(canvas => {
 ```ts
 snapshot(room, {
   padding: 5,
+  crop: null,
+  html2canvas: false,
+  crossorigin: false,
 }): Promise<HTMLCanvasElement | null>;
 ```
 
