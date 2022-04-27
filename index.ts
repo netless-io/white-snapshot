@@ -61,14 +61,15 @@ export interface SnapshotOptions {
   html2canvas?: boolean;
 }
 
-function wrapper_element() {
+function wrapper_element({ width = 100, height = 100, padding = 0 } = {}) {
   const wrapper = document.createElement("div");
   Object.assign(wrapper.style, {
     position: "fixed",
     top: `-9999px`,
     left: `-9999px`,
-    width: `100px`,
-    height: `100px`,
+    width: `${width}px`,
+    height: `${height}px`,
+    padding: `${padding}px`,
   });
   return wrapper;
 }
@@ -85,7 +86,7 @@ export async function snapshot(
   const { scenePath } = displayer.state.sceneState;
   let { width, height } = displayer.state.cameraState;
 
-  const wrapper = wrapper_element();
+  let wrapper = wrapper_element();
   document.body.appendChild(wrapper);
 
   // @ts-expect-error
@@ -98,6 +99,9 @@ export async function snapshot(
     return null;
   }
   ({ width, height } = extract_size_from_svg(svg, width, height));
+  document.body.removeChild(wrapper);
+  wrapper = wrapper_element({ width, height, padding });
+  document.body.appendChild(wrapper);
 
   // 2. Render canvas
   try {
@@ -105,18 +109,12 @@ export async function snapshot(
 
     if (html2canvas || displayer.fillSceneSnapshot.length < 5) {
       const { default: html2canvas } = await import("html2canvas");
-      Object.assign(wrapper.style, {
-        width: `${width}px`,
-        height: `${height}px`,
-        padding: `${padding}px`,
-      });
       canvas = await html2canvas(wrapper, {
         useCORS: true,
         backgroundColor: null,
         onclone: noop,
       });
     } else {
-      while (wrapper.firstChild) wrapper.removeChild(wrapper.lastChild!);
       // @ts-expect-error
       displayer.fillSceneSnapshot(scenePath, wrapper, width, height, "canvas");
       await next_frame();
