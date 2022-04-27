@@ -22,9 +22,12 @@ snapshot(room, {
 
 Returns `null` if failed.
 
-| Option  | Type   | Default | Description                     |
-| ------- | ------ | ------- | ------------------------------- |
-| padding | number | 5       | Pixels to the border of canvas. |
+| Option      | Type      | Default | Description                                                                 |
+| ----------- | --------- | ------- | --------------------------------------------------------------------------- |
+| padding     | number    | 5       | Pixels to the border of canvas.                                             |
+| crop        | Rectangle | null    | Apply crop on the snapshot. Note that the snapshot includes padding.        |
+| html2canvas | boolean   | false   | Use `html2canvas` to print SVG directly.                                    |
+| crossorigin | boolean   | false   | Apply hack to `document.createElement('img')` to enable crossorigin images. |
 
 ### Develop
 

@@ -40,6 +40,10 @@ function next_frame() {
   });
 }
 
+function call_fn<T>(fn: () => T) {
+  return fn();
+}
+
 export interface SnapshotOptions {
   /**
    * @default 5 (px)
@@ -59,6 +63,14 @@ export interface SnapshotOptions {
    * @default false
    */
   html2canvas?: boolean;
+
+  /**
+   * Apply hack to all `document.createElement('img')` to include crossorigin attribute.
+   * This option requires image server settings and therefore is not enabled by default.
+   *
+   * @default false
+   */
+  crossorigin?: boolean;
 }
 
 function wrapper_element({ width = 100, height = 100, padding = 0 } = {}) {
@@ -81,7 +93,12 @@ function wrapper_element({ width = 100, height = 100, padding = 0 } = {}) {
  */
 export async function snapshot(
   displayer: Displayer,
-  { padding = 5, crop: crop_ = null, html2canvas = false }: SnapshotOptions = {}
+  {
+    padding = 5,
+    crop: crop_ = null,
+    html2canvas = false,
+    crossorigin = false,
+  }: SnapshotOptions = {}
 ) {
   const { scenePath } = displayer.state.sceneState;
   let { width, height } = displayer.state.cameraState;
@@ -89,10 +106,14 @@ export async function snapshot(
   let wrapper = wrapper_element();
   document.body.appendChild(wrapper);
 
-  // @ts-expect-error
+  const invoke = crossorigin ? hack_create_image_with_cross_origin : call_fn;
+
   // 1. Get real size from svg element
-  displayer.fillSceneSnapshot(scenePath, wrapper, width, height, "svg");
-  await next_frame();
+  await invoke(async () => {
+    // @ts-expect-error
+    displayer.fillSceneSnapshot(scenePath, wrapper, width, height, "svg");
+    await next_frame();
+  });
   const svg = search_svg(wrapper);
   if (!svg) {
     document.body.removeChild(wrapper);
@@ -115,9 +136,17 @@ export async function snapshot(
         onclone: noop,
       });
     } else {
-      // @ts-expect-error
-      displayer.fillSceneSnapshot(scenePath, wrapper, width, height, "canvas");
-      await next_frame();
+      await invoke(async () => {
+        displayer.fillSceneSnapshot(
+          scenePath,
+          wrapper,
+          width,
+          height,
+          // @ts-expect-error
+          "canvas"
+        );
+        await next_frame();
+      });
       canvas = search_canvas(wrapper);
     }
 
@@ -158,4 +187,28 @@ export function crop(
     rect.height
   );
   return newCanvas;
+}
+
+let hacked = false; // helper to prevent recursive hack
+export async function hack_create_image_with_cross_origin(
+  cb: () => Promise<void>
+) {
+  if (hacked) return await cb();
+
+  hacked = true;
+  const _createElement = document.createElement;
+  (document as any).createElement = function (...args: any[]) {
+    const result = _createElement.apply(this, args as any);
+    if (result instanceof HTMLImageElement) {
+      result.setAttribute("crossorigin", "anonymous");
+    }
+    return result;
+  };
+
+  try {
+    return await cb();
+  } finally {
+    (document as any).createElement = _createElement;
+    hacked = false;
+  }
 }
