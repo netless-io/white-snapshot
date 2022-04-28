@@ -128,15 +128,19 @@ export async function snapshot(
     return null;
   }
   ({ width, height } = extract_size_from_svg(svg, width, height));
-  document.body.removeChild(wrapper);
-  wrapper = wrapper_element({ width, height, padding });
-  document.body.appendChild(wrapper);
 
   // 2. Render canvas
   try {
     let canvas: HTMLCanvasElement | null;
 
     if (html2canvas || displayer.fillSceneSnapshot.length < 5) {
+      // Scale the svg to real size.
+      Object.assign(wrapper.style, {
+        width: `${width}px`,
+        height: `${height}px`,
+        padding: `${padding}px`,
+      });
+
       const { default: html2canvas } = await import("html2canvas");
       canvas = await html2canvas(wrapper, {
         useCORS: true,
@@ -144,6 +148,11 @@ export async function snapshot(
         onclone: noop,
       });
     } else {
+      // Prepare for rendering again.
+      document.body.removeChild(wrapper);
+      wrapper = wrapper_element({ width, height, padding });
+      document.body.appendChild(wrapper);
+
       await invoke(async () => {
         displayer.fillSceneSnapshot(
           scenePath,
