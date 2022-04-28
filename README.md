@@ -9,7 +9,7 @@ Requires white-web-sdk &ge; 2.16.20 to **not** depending on html2canvas.
 ```js
 import { snapshot } from "@netless/white-snapshot";
 // room = await sdk.joinRoom(...)
-snapshot(room).then((canvas) => {
+snapshot(room).then(canvas => {
   document.body.append(canvas);
 });
 ```
@@ -78,6 +78,72 @@ To get <samp>1:1</samp> canvas snapshot of a scene, we have to
 ```bash
 pnpm dev
 ```
+
+### Changelog
+
+#### 0.2.2
+
+- Fixed `html2canvas` usage may get empty output.\
+  Now it works the same as 0.2.0.
+- Added Options:
+
+  ```ts
+  interface SnapshotOptions {
+    /**
+     * Print which scene.
+     *
+     * @default displayer.state.sceneState.scenePath
+     */
+    scenePath?: string;
+  }
+  ```
+
+#### 0.2.1
+
+- Support white-web-sdk 2.16.20's native canvas output.
+- Added options:
+
+  ```ts
+  interface SnapshotOptions {
+    /**
+     * Use `html2canvas` to print SVG directly.
+     *
+     * @default false
+     */
+    html2canvas?: boolean;
+    /**
+     * Apply hack to all `document.createElement('img')` to include crossorigin attribute.
+     * This option requires image server settings and therefore is not enabled by default.
+     *
+     * @default false
+     */
+    crossorigin?: boolean;
+  }
+  ```
+
+#### 0.2.0
+
+- Support `html2canvas` based snapshot. Options:
+
+  ```ts
+  interface SnapshotOptions {
+    /**
+     * @default 5 (px)
+     */
+    padding?: number;
+    /**
+     * Apply crop on the snapshot. Note that the snapshot includes padding.
+     *
+     * @default null
+     */
+    crop?: Record<"x" | "y" | "width" | "height", number> | null;
+  }
+
+  function snapshot(
+    displayer: Displayer,
+    { padding, crop: crop_ }?: SnapshotOptions
+  ): Promise<HTMLCanvasElement | null>;
+  ```
 
 ## License
 
