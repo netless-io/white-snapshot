@@ -46,6 +46,13 @@ function call_fn<T>(fn: () => T) {
 
 export interface SnapshotOptions {
   /**
+   * Print which scene.
+   *
+   * @default displayer.state.sceneState.scenePath
+   */
+  scenePath?: string;
+
+  /**
    * @default 5 (px)
    */
   padding?: number;
@@ -94,13 +101,14 @@ function wrapper_element({ width = 100, height = 100, padding = 0 } = {}) {
 export async function snapshot(
   displayer: Displayer,
   {
+    scenePath: scenePath_,
     padding = 5,
     crop: crop_ = null,
     html2canvas = false,
     crossorigin = false,
   }: SnapshotOptions = {}
 ) {
-  const { scenePath } = displayer.state.sceneState;
+  const scenePath = scenePath_ || displayer.state.sceneState.scenePath;
   let { width, height } = displayer.state.cameraState;
 
   let wrapper = wrapper_element();

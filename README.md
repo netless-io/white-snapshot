@@ -18,6 +18,7 @@ snapshot(room).then((canvas) => {
 
 ```ts
 snapshot(room, {
+  scenePath: "/init",
   padding: 5,
   crop: null,
   html2canvas: false,
@@ -27,14 +28,15 @@ snapshot(room, {
 
 Returns `null` if failed.
 
-| Option      | Type      | Default | Description                                                                 |
-| ----------- | --------- | ------- | --------------------------------------------------------------------------- |
-| padding     | number    | 5       | Pixels to the border of canvas.                                             |
-| crop        | Rectangle | null    | Apply crop on the snapshot. Note that the snapshot includes padding.        |
-| html2canvas | boolean   | false\* | Use `html2canvas` to print SVG directly.                                    |
-| crossorigin | boolean   | false   | Apply hack to `document.createElement('img')` to enable crossorigin images. |
+| Option      | Type      | Default       | Description                                                                 |
+| ----------- | --------- | ------------- | --------------------------------------------------------------------------- |
+| scenePath   | string    | current scene | Default is `displayer.state.sceneState.scenePath`.                          |
+| padding     | number    | 5             | Pixels to the border of canvas.                                             |
+| crop        | Rectangle | null          | Apply crop on the snapshot. Note that the snapshot includes padding.        |
+| html2canvas | boolean   | false\*       | Use `html2canvas` to print SVG directly.                                    |
+| crossorigin | boolean   | false         | Apply hack to `document.createElement('img')` to enable crossorigin images. |
 
-\*: true if white-web-sdk < 2.16.20
+\*: always true if white-web-sdk < 2.16.20 because previously there's API support in the sdk.
 
 ### How it works
 
