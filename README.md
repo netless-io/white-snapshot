@@ -2,7 +2,7 @@
 
 Take a snapshot of a white-web-sdk scene.
 
-Requires white-web-sdk &ge; 2.16.20 to **not** depending on html2canvas.
+Requires white-web-sdk &ge; 2.16.20.
 
 ### Usage
 
@@ -21,7 +21,6 @@ snapshot(room, {
   scenePath: "/init",
   padding: 5,
   crop: null,
-  html2canvas: false,
   crossorigin: false,
 }): Promise<HTMLCanvasElement | null>;
 ```
@@ -33,10 +32,7 @@ Returns `null` if failed.
 | scenePath   | string    | current scene | Default is `displayer.state.sceneState.scenePath`.                          |
 | padding     | number    | 5             | Pixels to the border of canvas.                                             |
 | crop        | Rectangle | null          | Apply crop on the snapshot. Note that the snapshot includes padding.        |
-| html2canvas | boolean   | false\*       | Use `html2canvas` to print SVG directly.                                    |
 | crossorigin | boolean   | false         | Apply hack to `document.createElement('img')` to enable crossorigin images. |
-
-\*: always true if white-web-sdk < 2.16.20 because previously there's API support in the sdk.
 
 ### How it works
 
@@ -80,6 +76,11 @@ pnpm dev
 ```
 
 ### Changelog
+
+#### 0.3.0
+
+- Removed html2canvas dependency.\
+  Now it must requires white-web-sdk &ge; 2.16.20.
 
 #### 0.2.2
 

@@ -32,12 +32,14 @@ function search_canvas(container: HTMLDivElement) {
   return null;
 }
 
-function noop() {}
-
 function next_frame() {
   return new Promise(resolve => {
     (window.requestAnimationFrame || setTimeout)(resolve);
   });
+}
+
+async function next_frames(n: number) {
+  while (n-- > 0) await next_frame();
 }
 
 function call_fn<T>(fn: () => T) {
@@ -63,13 +65,6 @@ export interface SnapshotOptions {
    * @default null
    */
   crop?: Record<"x" | "y" | "width" | "height", number> | null;
-
-  /**
-   * Use `html2canvas` to print SVG directly.
-   *
-   * @default false
-   */
-  html2canvas?: boolean;
 
   /**
    * Apply hack to all `document.createElement('img')` to include crossorigin attribute.
@@ -104,7 +99,6 @@ export async function snapshot(
     scenePath: scenePath_,
     padding = 5,
     crop: crop_ = null,
-    html2canvas = false,
     crossorigin = false,
   }: SnapshotOptions = {}
 ) {
@@ -131,42 +125,19 @@ export async function snapshot(
 
   // 2. Render canvas
   try {
-    let canvas: HTMLCanvasElement | null;
+    // Prepare for rendering again.
+    document.body.removeChild(wrapper);
+    wrapper = wrapper_element({ width, height, padding });
+    document.body.appendChild(wrapper);
 
-    if (html2canvas || displayer.fillSceneSnapshot.length < 5) {
-      // Scale the svg to real size.
-      Object.assign(wrapper.style, {
-        width: `${width}px`,
-        height: `${height}px`,
-        padding: `${padding}px`,
-      });
+    await invoke(async () => {
+      // @ts-expect-error
+      displayer.fillSceneSnapshot(scenePath, wrapper, width, height, "canvas");
+      /* MAGIC, don't touch */
+      await next_frames(4);
+    });
 
-      const { default: html2canvas } = await import("html2canvas");
-      canvas = await html2canvas(wrapper, {
-        useCORS: true,
-        backgroundColor: null,
-        onclone: noop,
-      });
-    } else {
-      // Prepare for rendering again.
-      document.body.removeChild(wrapper);
-      wrapper = wrapper_element({ width, height, padding });
-      document.body.appendChild(wrapper);
-
-      await invoke(async () => {
-        displayer.fillSceneSnapshot(
-          scenePath,
-          wrapper,
-          width,
-          height,
-          // @ts-expect-error
-          "canvas"
-        );
-        await next_frame();
-      });
-      canvas = search_canvas(wrapper);
-    }
-
+    const canvas = search_canvas(wrapper);
     if (!canvas) return null;
 
     return crop_ ? crop(canvas, crop_) : canvas;
