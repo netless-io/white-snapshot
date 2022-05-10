@@ -20,6 +20,7 @@ snapshot(room).then(canvas => {
 snapshot(room, {
   scenePath: "/init",
   padding: 5,
+  background: 'transparent',
   crop: null,
   crossorigin: false,
 }): Promise<HTMLCanvasElement | null>;
@@ -31,6 +32,7 @@ Returns `null` if failed.
 | ----------- | --------- | ------------- | --------------------------------------------------------------------------- |
 | scenePath   | string    | current scene | Default is `displayer.state.sceneState.scenePath`.                          |
 | padding     | number    | 5             | Pixels to the border of canvas.                                             |
+| background  | string    |               | Background color.                                                           |
 | crop        | Rectangle | null          | Apply crop on the snapshot. Note that the snapshot includes padding.        |
 | crossorigin | boolean   | false         | Apply hack to `document.createElement('img')` to enable crossorigin images. |
 
