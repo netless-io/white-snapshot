@@ -23,7 +23,7 @@
   <body>
     <div>Note: canvas elements have green border.</div>
     <div id="whiteboard"></div>
-    <button onclick="snapshot(room).then(e=>document.body.append(e))">
+    <button onclick="snapshot(room,{padding:24,background:'#fff'}).then(e=>document.body.append(e))">
       SNAPSHOT
     </button>
     <script src="test.js"></script>

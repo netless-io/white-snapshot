@@ -77,6 +77,24 @@ pnpm dev
 
 ### Changelog
 
+#### 0.3.1
+
+- Fixed `padding` not work.\
+  It still has a little visual bug.
+
+- Added Options:
+
+  ```ts
+  interface SnapshotOptions {
+    /**
+     * Background color.
+     *
+     * @default transparent
+     */
+    background?: string;
+  }
+  ```
+
 #### 0.3.0
 
 - Removed html2canvas dependency.\

@@ -2,12 +2,12 @@ lockfileVersion: 5.4
 
 specifiers:
   esbuild: ^0.14.38
-  typescript: ^4.6.3
+  typescript: ^4.6.4
   white-web-sdk: ^2.16.20
 
 devDependencies:
   esbuild: 0.14.38
-  typescript: 4.6.3
+  typescript: 4.6.4
   white-web-sdk: 2.16.20
 
 packages:
@@ -545,8 +545,8 @@ packages:
     engines: {node: '>= 10'}
     dev: true
 
-  /typescript/4.6.3:
-    resolution: {integrity: sha512-yNIatDa5iaofVozS/uQJEl3JRWLKKGJKh6Yaiv0GLGSuhpFJe7P3SbHZ8/yjAHRQwKRoA6YZqlfjXWmVzoVSMw==}
+  /typescript/4.6.4:
+    resolution: {integrity: sha512-9ia/jWHIEbo49HfjrLGfKbZSuWo9iTMwXO+Ca3pRsSpbsMbc7/IU8NKdCZVRRBafVPGnoJeFL76ZOAA84I9fEg==}
     engines: {node: '>=4.2.0'}
     hasBin: true
     dev: true

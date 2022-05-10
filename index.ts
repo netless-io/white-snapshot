@@ -60,6 +60,13 @@ export interface SnapshotOptions {
   padding?: number;
 
   /**
+   * Background color.
+   *
+   * @default transparent
+   */
+  background?: string;
+
+  /**
    * Apply crop on the snapshot. Note that the snapshot includes padding.
    *
    * @default null
@@ -98,6 +105,7 @@ export async function snapshot(
   {
     scenePath: scenePath_,
     padding = 5,
+    background,
     crop: crop_ = null,
     crossorigin = false,
   }: SnapshotOptions = {}
@@ -133,14 +141,23 @@ export async function snapshot(
     await invoke(async () => {
       // @ts-expect-error
       displayer.fillSceneSnapshot(scenePath, wrapper, width, height, "canvas");
-      /* MAGIC, don't touch */
-      await next_frames(4);
+      /** MAGIC, don't touch */
+      for (let n = 4; n; n--) await next_frame();
     });
 
-    const canvas = search_canvas(wrapper);
+    let canvas = search_canvas(wrapper);
     if (!canvas) return null;
 
-    return crop_ ? crop(canvas, crop_) : canvas;
+    if (padding) {
+      canvas = add_padding(canvas, padding);
+    }
+    if (crop_) {
+      canvas = crop(canvas, crop_);
+    }
+    if (background) {
+      canvas = fill_background(canvas, background);
+    }
+    return canvas;
   } finally {
     document.body.removeChild(wrapper);
   }
@@ -163,6 +180,7 @@ export function crop(
   }
   newCanvas.width = rect.width;
   newCanvas.height = rect.height;
+  newCanvas.style.cssText = canvas.style.cssText;
   ctx.drawImage(
     canvas,
     rect.x,
@@ -174,6 +192,34 @@ export function crop(
     rect.width,
     rect.height
   );
+  return newCanvas;
+}
+
+export function fill_background(canvas: HTMLCanvasElement, background: string) {
+  const newCanvas = document.createElement("canvas");
+  const ctx = newCanvas.getContext("2d");
+  if (!ctx) {
+    throw new Error("Failed to create canvas context.");
+  }
+  newCanvas.width = canvas.width;
+  newCanvas.height = canvas.height;
+  newCanvas.style.cssText = canvas.style.cssText;
+  ctx.fillStyle = background;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(canvas, 0, 0);
+  return newCanvas;
+}
+
+export function add_padding(canvas: HTMLCanvasElement, padding: number) {
+  const newCanvas = document.createElement("canvas");
+  const ctx = newCanvas.getContext("2d");
+  if (!ctx) {
+    throw new Error("Failed to create canvas context.");
+  }
+  newCanvas.width = canvas.width + padding * 2;
+  newCanvas.height = canvas.height + padding * 2;
+  newCanvas.style.cssText = canvas.style.cssText;
+  ctx.drawImage(canvas, padding, padding);
   return newCanvas;
 }
 
