@@ -16,14 +16,14 @@
         height: 300px;
       }
       canvas {
-        border: 1px solid green;
+        outline: 1px solid green;
       }
     </style>
   </head>
   <body>
     <div>Note: canvas elements have green border.</div>
     <div id="whiteboard"></div>
-    <button onclick="snapshot(room,{padding:24,background:'#fff'}).then(e=>document.body.append(e))">
+    <button onclick="snapshot(room,{crossorigin:true}).then(e=>document.body.append(e))">
       SNAPSHOT
     </button>
     <script src="test.js"></script>

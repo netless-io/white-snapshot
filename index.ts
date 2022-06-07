@@ -1,4 +1,5 @@
 import type { Displayer } from "white-web-sdk";
+import html2canvas from "html2canvas";
 
 /**
  * Search the displaying svg element.
@@ -18,20 +19,6 @@ function extract_size_from_svg(svg: SVGElement, width: number, height: number) {
   return { width, height };
 }
 
-/**
- * Search the displaying canvas element.
- * @param container The param you used in `room.bindHtmlElement`.
- * @returns The canvas element or null if not found.
- */
-function search_canvas(container: HTMLDivElement) {
-  for (const canvas of container.querySelectorAll(".background~canvas")) {
-    if ((canvas as HTMLCanvasElement).style.visibility === "visible") {
-      return canvas as HTMLCanvasElement;
-    }
-  }
-  return null;
-}
-
 function next_frame() {
   return new Promise(resolve => {
     (window.requestAnimationFrame || setTimeout)(resolve);
@@ -41,6 +28,8 @@ function next_frame() {
 async function next_frames(n: number) {
   while (n-- > 0) await next_frame();
 }
+
+function noop() {}
 
 function call_fn<T>(fn: () => T) {
   return fn();
@@ -118,11 +107,10 @@ export async function snapshot(
 
   const invoke = crossorigin ? hack_create_image_with_cross_origin : call_fn;
 
-  // 1. Get real size from svg element
+  // 1. Get real size from svg element.
   await invoke(async () => {
-    // @ts-expect-error
-    displayer.fillSceneSnapshot(scenePath, wrapper, width, height, "svg");
-    await next_frame();
+    displayer.fillSceneSnapshot(scenePath, wrapper, width, height);
+    await next_frames(10);
   });
   const svg = search_svg(wrapper);
   if (!svg) {
@@ -131,33 +119,40 @@ export async function snapshot(
   }
   ({ width, height } = extract_size_from_svg(svg, width, height));
 
-  // 2. Render canvas
-  try {
-    // Prepare for rendering again.
-    document.body.removeChild(wrapper);
-    wrapper = wrapper_element({ width, height, padding });
-    document.body.appendChild(wrapper);
+  // 2. Render canvas again with correct size,
+  //    otherwise the dom elements won't be in the right place.
+  document.body.removeChild(wrapper);
+  wrapper = wrapper_element({ width, height, padding });
+  document.body.appendChild(wrapper);
+  await invoke(async () => {
+    displayer.fillSceneSnapshot(scenePath, wrapper, width, height);
+    await next_frames(10);
+  });
 
-    await invoke(async () => {
-      // @ts-expect-error
-      displayer.fillSceneSnapshot(scenePath, wrapper, width, height, "canvas");
-      /** MAGIC, don't touch */
-      for (let n = 4; n; n--) await next_frame();
+  try {
+    let canvas = await html2canvas(wrapper, {
+      useCORS: true,
+      backgroundColor: background || null,
+      async onclone(doc: Document): Promise<void> {
+        const images = Array.from(doc.getElementsByTagName("image"));
+        const tasks: Promise<string>[] = [];
+        for (const img of images) {
+          tasks.push(src2dataurl(img.href.baseVal));
+        }
+        for (const img of images) {
+          const dataurl = await tasks.shift();
+          if (dataurl) img.href.baseVal = dataurl;
+        }
+      },
     });
 
-    let canvas = search_canvas(wrapper);
-    if (!canvas) return null;
-
-    if (padding) {
-      canvas = add_padding(canvas, padding);
-    }
     if (crop_) {
       canvas = crop(canvas, crop_);
     }
-    if (background) {
-      canvas = fill_background(canvas, background);
-    }
     return canvas;
+  } catch (error) {
+    console.error(error);
+    return null;
   } finally {
     document.body.removeChild(wrapper);
   }
@@ -181,17 +176,7 @@ export function crop(
   newCanvas.width = rect.width;
   newCanvas.height = rect.height;
   newCanvas.style.cssText = canvas.style.cssText;
-  ctx.drawImage(
-    canvas,
-    rect.x,
-    rect.y,
-    rect.width,
-    rect.height,
-    0,
-    0,
-    rect.width,
-    rect.height
-  );
+  ctx.drawImage(canvas, rect.x, rect.y, rect.width, rect.height, 0, 0, rect.width, rect.height);
   return newCanvas;
 }
 
@@ -224,9 +209,7 @@ export function add_padding(canvas: HTMLCanvasElement, padding: number) {
 }
 
 let hacked = false; // helper to prevent recursive hack
-export async function hack_create_image_with_cross_origin(
-  cb: () => Promise<void>
-) {
+export async function hack_create_image_with_cross_origin(cb: () => Promise<void>) {
   if (hacked) return await cb();
 
   hacked = true;
@@ -245,4 +228,14 @@ export async function hack_create_image_with_cross_origin(
     (document as any).createElement = _createElement;
     hacked = false;
   }
+}
+
+export async function src2dataurl(src: string) {
+  const r = await fetch(src);
+  const blob = await r.blob();
+  return new Promise<string>(resolve => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.readAsDataURL(blob);
+  });
 }
