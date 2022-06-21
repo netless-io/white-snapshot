@@ -69,6 +69,19 @@ export interface SnapshotOptions {
    * @default false
    */
   crossorigin?: boolean;
+
+  /**
+   * Due to a [limitation](https://github.com/niklasvh/html2canvas/issues/592#issuecomment-727540799)
+   * in `html2canvas`, we must convert images to dataurl before feeding them to it.
+   * You can set this option to replace the default image loader.
+   *
+   * You can obtain the default loader through:
+   *
+   * ```js
+   * import { src2dataurl } from "@netless/white-snapshot"
+   * ```
+   */
+  src2dataurl?: (src: string) => Promise<string>;
 }
 
 function wrapper_element({ width = 100, height = 100, padding = 0 } = {}) {
@@ -96,6 +109,7 @@ export async function snapshot(
     padding = 5,
     background,
     crop: crop_ = null,
+    src2dataurl: src2dataurl_,
     crossorigin = false,
   }: SnapshotOptions = {}
 ) {
@@ -136,8 +150,9 @@ export async function snapshot(
       async onclone(doc: Document): Promise<void> {
         const images = Array.from(doc.getElementsByTagName("image"));
         const tasks: Promise<string>[] = [];
+        const transformer = src2dataurl_ || src2dataurl;
         for (const img of images) {
-          tasks.push(src2dataurl(img.href.baseVal));
+          tasks.push(transformer(img.href.baseVal));
         }
         for (const img of images) {
           const dataurl = await tasks.shift();
@@ -230,8 +245,8 @@ export async function hack_create_image_with_cross_origin(cb: () => Promise<void
   }
 }
 
-export async function src2dataurl(src: string) {
-  const r = await fetch(src);
+export async function src2dataurl(src: string, force = false) {
+  const r = await fetch(src, { cache: force ? "no-store" : "default" });
   const blob = await r.blob();
   return new Promise<string>(resolve => {
     const reader = new FileReader();
