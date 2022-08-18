@@ -1,4 +1,3 @@
-import type { Displayer } from "white-web-sdk";
 import html2canvas from "html2canvas";
 
 /**
@@ -13,14 +12,14 @@ function search_svg(container: HTMLDivElement) {
 function extract_size_from_svg(svg: SVGElement, width: number, height: number) {
   const viewBox = svg.getAttribute("viewBox");
   if (viewBox) {
-    const view = viewBox.split(" ").map(e => Number(e));
+    const view = viewBox.split(" ").map((e) => Number(e));
     [width, height] = view.slice(2);
   }
   return { width, height };
 }
 
 function next_frame() {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     (window.requestAnimationFrame || setTimeout)(resolve);
   });
 }
@@ -95,6 +94,19 @@ function wrapper_element({ width = 100, height = 100, padding = 0 } = {}) {
     padding: `${padding}px`,
   });
   return wrapper;
+}
+
+export interface Displayer {
+  state: {
+    sceneState: {
+      scenePath: string;
+    };
+    cameraState: {
+      width: number;
+      height: number;
+    };
+  };
+  fillSceneSnapshot(scenePath: string, div: HTMLElement, width: number, height: number): void;
 }
 
 /**
@@ -179,10 +191,7 @@ export async function snapshot(
  * @param rect The rect to cut.
  * @returns A new canvas element.
  */
-export function crop(
-  canvas: HTMLCanvasElement,
-  rect: Record<"x" | "y" | "width" | "height", number>
-) {
+export function crop(canvas: HTMLCanvasElement, rect: Record<"x" | "y" | "width" | "height", number>) {
   const newCanvas = document.createElement("canvas");
   const ctx = newCanvas.getContext("2d");
   if (!ctx) {
@@ -248,7 +257,7 @@ export async function hack_create_image_with_cross_origin(cb: () => Promise<void
 export async function src2dataurl(src: string, force = false) {
   const r = await fetch(src, { cache: force ? "no-store" : "default" });
   const blob = await r.blob();
-  return new Promise<string>(resolve => {
+  return new Promise<string>((resolve) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);
     reader.readAsDataURL(blob);

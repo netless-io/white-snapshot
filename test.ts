@@ -22,7 +22,5 @@ sdk
     (window as any).room = room;
     (window as any).snapshot = snapshot;
 
-    room.bindHtmlElement(
-      document.getElementById("whiteboard") as HTMLDivElement
-    );
+    room.bindHtmlElement(document.getElementById("whiteboard") as HTMLDivElement);
   });
