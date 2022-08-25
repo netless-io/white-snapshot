@@ -1,6 +1,6 @@
 {
   "name": "@netless/white-snapshot",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Take a snapshot of a white-web-sdk scene.",
   "main": "index.js",
   "module": "index.mjs",
