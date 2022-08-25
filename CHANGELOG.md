@@ -1,5 +1,9 @@
 ## Changelog
 
+### 0.4.2
+
+- Updated `Displayer` typing, for better understand what it does.
+
 ### 0.4.1
 
 - Added `src2dataurl` option.
